@@ -6,3 +6,6 @@ bagian: - admin panel
 
 2. muhammad fadel lutzka || 2902697574
 bagian: Login
+
+3. azkiya rania alifiya || 2902738151
+bagian: ticket purchase, cancel ticket, check bus status
