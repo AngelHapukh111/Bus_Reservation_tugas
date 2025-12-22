@@ -1,0 +1,84 @@
+/* ================= GLOBAL DATA ================= */
+
+/*
+   These variables store the admin's username and password.
+   They are global so all login-related functions can access them.
+*/
+char adminUsername[50] = "";
+char adminPassword[50] = "";
+
+
+/* ================= FILE PROCESSING ================= */
+
+/*
+   saveAdmin()
+   This function saves the admin username and password
+   into a file called "admin.txt".
+   It is used after the admin registers or updates credentials.
+*/
+void saveAdmin() {
+    FILE *fp = fopen("admin.txt", "w");
+    if (fp) {
+        fprintf(fp, "%s\n%s\n", adminUsername, adminPassword);
+        fclose(fp);
+    }
+}
+
+/*
+   loadAdmin()
+   This function loads the admin username and password
+   from the "admin.txt" file when the program starts.
+   This allows the login data to persist between runs.
+*/
+void loadAdmin() {
+    FILE *fp = fopen("admin.txt", "r");
+    if (fp) {
+        fscanf(fp, "%s", adminUsername);
+        fscanf(fp, "%s", adminPassword);
+        fclose(fp);
+    }
+}
+
+
+/* ================= ADMIN ================= */
+
+/*
+   adminLogin()
+   This function handles the admin login process.
+   It asks the user to input a username and password,
+   then compares them with the stored admin credentials.
+   If they match, login is successful.
+*/
+int adminLogin() {
+    char u[50], p[50];
+    clearScreen();
+    printf("Username: ");
+    scanf("%s", u);
+    printf("Password: ");
+    scanf("%s", p);
+
+    if (strcmp(u, adminUsername) == 0 &&
+        strcmp(p, adminPassword) == 0)
+        return 1;
+
+    printf("Login failed!\n");
+    pauseScreen();
+    return 0;
+}
+
+/*
+   adminRegister()
+   This function allows a new admin account to be created.
+   The entered username and password are saved to a file
+   so they can be used for future logins.
+*/
+void adminRegister() {
+    clearScreen();
+    printf("New Username: ");
+    scanf("%s", adminUsername);
+    printf("New Password: ");
+    scanf("%s", adminPassword);
+    saveAdmin();
+    printf("Admin created!\n");
+    pauseScreen();
+}
