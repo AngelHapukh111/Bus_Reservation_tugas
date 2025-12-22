@@ -8,4 +8,4 @@ bagian: - admin panel
 bagian: Login
 
 3. azkiya rainna alifiya || 2902738151
-bagian: ticket purchase, cancel ticket, check bus status
+bagian: customer
