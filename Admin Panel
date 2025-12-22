@@ -1,0 +1,139 @@
+/* ================= ADMIN ACCOUNT ================= */
+
+int adminLogin() {
+    char user[50], pass[50];
+
+    clearScreen();
+    printf("=== Admin Login ===\n");
+    printf("Username: ");
+    scanf("%s", user);
+    printf("Password: ");
+    scanf("%s", pass);
+
+    if (strcmp(user, adminUsername) == 0 &&
+        strcmp(pass, adminPassword) == 0)
+        return 1;
+
+    printf("Login failed!\n");
+    pauseScreen();
+    return 0;
+}
+
+void adminRegister() {
+    clearScreen();
+    printf("=== Create Admin Account ===\n");
+    printf("New Username: ");
+    scanf("%s", adminUsername);
+    printf("New Password: ");
+    scanf("%s", adminPassword);
+
+    printf("Admin account created!\n");
+    pauseScreen();
+}
+
+/* ================= BUS MANAGEMENT ================= */
+
+void clearSeats(struct Bus *bus) {
+    for (int i = 0; i < MAX_ROW; i++)
+        for (int j = 0; j < COL; j++)
+            bus->seat[i][j] = 0;
+}
+
+void addBus() {
+    struct Bus *bus;
+    char overwrite;
+
+    if (busCount < MAX_BUS) {
+        bus = &buses[busCount++];
+    } else {
+        printf("Maximum bus reached.\n");
+        printf("Overwrite oldest bus? (y/n): ");
+        scanf(" %c", &overwrite);
+        if (overwrite != 'y' && overwrite != 'Y')
+            return;
+
+        bus = &buses[0];
+        for (int i = 1; i < MAX_BUS; i++)
+            buses[i - 1] = buses[i];
+    }
+
+    clearScreen();
+    printf("=== Add Bus ===\n");
+
+    printf("Bus Number: ");
+    scanf("%d", &bus->busNumber);
+
+    printf("From: ");
+    scanf(" %[^\n]", bus->from);
+
+    printf("To: ");
+    scanf(" %[^\n]", bus->to);
+
+    printf("Bus Size:\n");
+    printf("1. Small (12 seats)\n");
+    printf("2. Big (24 seats)\n");
+    printf("Choose: ");
+
+    int size;
+    scanf("%d", &size);
+
+    if (size == 2) {
+        bus->rows = 6;
+        bus->totalSeats = 24;
+    } else {
+        bus->rows = 3;
+        bus->totalSeats = 12;
+    }
+
+    bus->availableSeats = bus->totalSeats;
+    bus->active = 1;
+
+    clearSeats(bus);
+
+    printf("Bus added successfully!\n");
+    pauseScreen();
+}
+
+void viewBuses() {
+    clearScreen();
+
+    if (busCount == 0) {
+        printf("Tidak ada schedule\n");
+        pauseScreen();
+        return;
+    }
+
+    for (int i = 0; i < busCount; i++) {
+        printf("\n=== Bus %d ===\n", i + 1);
+        printf("Number : %d\n", buses[i].busNumber);
+        printf("Route  : %s -> %s\n", buses[i].from, buses[i].to);
+        printf("Seats  : %d / %d\n",
+               buses[i].availableSeats,
+               buses[i].totalSeats);
+
+        showSeatLayout(&buses[i]);
+    }
+
+    pauseScreen();
+}
+
+/* ================= ADMIN MENU ================= */
+
+void adminMenu() {
+    int choice;
+    do {
+        clearScreen();
+        printf("=== Admin Menu ===\n");
+        printf("1. Add Bus\n");
+        printf("2. View Buses\n");
+        printf("3. Logout\n");
+        printf("Choose: ");
+        scanf("%d", &choice);
+
+        if (choice == 1)
+            addBus();
+        else if (choice == 2)
+            viewBuses();
+
+    } while (choice != 3);
+}
