@@ -29,20 +29,6 @@ void loadAdmins() { // membaca akun admin dari file
     fclose(fp);
 }
 
-/* ---------- ADMIN LOGIN ---------- */
-int adminLogin() { // login admin
-    char u[50], p[50];
-    clearScreen();
-    printf("Username: "); scanf("%s", u);
-    printf("Password: "); scanf("%s", p);
-    for (int i = 0; i < adminCount; i++)
-        if (!strcmp(u, admins[i].username) && !strcmp(p, admins[i].password))
-            return 1;
-    printf("Login gagal!\n");
-    pauseScreen();
-    return 0;
-}
-
 /* ---------- ADMIN REGISTER ---------- */
 void adminRegister() { // register admin baru
     clearScreen();
