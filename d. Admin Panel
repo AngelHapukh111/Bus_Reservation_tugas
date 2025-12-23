@@ -1,52 +1,248 @@
-/* ================= ADMIN ================= */
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
-/* ---------- STRUCT ADMIN ---------- */
-struct Admin { // struct untuk akun admin
-    char username[50];        
-    char password[50];        
+/* ================= KONSTANTA ================= */
+#define MAX_BUS 3
+#define MAX_ROW 6
+#define COL 4
+
+/* ================= STRUCT ================= */
+struct Bus {
+    int active;
+    int busNumber;
+    char from[50];
+    char to[50];
+    int rows;
+    int totalSeats;
+    int availableSeats;
+    int seat[MAX_ROW][COL];
 };
 
-/* ---------- DATA GLOBAL ADMIN ---------- */
-struct Admin admins[50];   // array semua admin
-int adminCount = 0;        // jumlah admin
+/* ================= DATA GLOBAL ================= */
+struct Bus buses[MAX_BUS];
+int busCount = 0;
 
-/* ---------- FILE ADMIN ---------- */
-void saveAdmins() { // menyimpan semua akun admin ke file
-    FILE *fp = fopen("admins.txt", "w");
+/* ================= UTIL ================= */
+void pauseScreen() {
+    printf("\nPress ENTER to continue...");
+    getchar(); getchar();
+}
+
+void clearScreen() {
+#ifdef _WIN32
+    system("cls");
+#else
+    system("clear");
+#endif
+}
+
+/* ================= FILE BUS ================= */
+void saveBuses() {
+    FILE *fp = fopen("buses.txt", "w");
     if (!fp) return;
-    fprintf(fp, "%d\n", adminCount);
-    for (int i = 0; i < adminCount; i++)
-        fprintf(fp, "%s %s\n", admins[i].username, admins[i].password);
+
+    fprintf(fp, "%d\n", busCount);
+
+    for (int i = 0; i < busCount; i++) {
+        struct Bus *b = &buses[i];
+        fprintf(fp,
+            "BusNumber: %d\nFrom: %s\nTo: %s\nRows: %d TotalSeats: %d AvailableSeats: %d\n",
+            b->busNumber, b->from, b->to,
+            b->rows, b->totalSeats, b->availableSeats);
+
+        for (int r = 0; r < b->rows; r++) {
+            fprintf(fp, "Row %c: ", 'A' + r);
+            for (int c = 0; c < COL; c++)
+                fprintf(fp, "%d ", b->seat[r][c]);
+            fprintf(fp, "\n");
+        }
+        fprintf(fp, "----\n");
+    }
     fclose(fp);
 }
 
-void loadAdmins() { // membaca akun admin dari file
-    FILE *fp = fopen("admins.txt", "r");
+void loadBuses() {
+    FILE *fp = fopen("buses.txt", "r");
     if (!fp) return;
-    fscanf(fp, "%d", &adminCount);
-    for (int i = 0; i < adminCount; i++)
-        fscanf(fp, "%s %s", admins[i].username, admins[i].password);
+
+    fscanf(fp, "%d\n", &busCount);
+
+    for (int i = 0; i < busCount; i++) {
+        struct Bus *b = &buses[i];
+        char temp[100];
+
+        fscanf(fp, "BusNumber: %d\n", &b->busNumber);
+        fscanf(fp, "From: %[^\n]\n", b->from);
+        fscanf(fp, "To: %[^\n]\n", b->to);
+        fscanf(fp, "Rows: %d TotalSeats: %d AvailableSeats: %d\n",
+               &b->rows, &b->totalSeats, &b->availableSeats);
+
+        b->active = 1;
+
+        for (int r = 0; r < b->rows; r++) {
+            fscanf(fp, "Row %*c:");
+            for (int c = 0; c < COL; c++)
+                fscanf(fp, "%d", &b->seat[r][c]);
+            fgets(temp, sizeof(temp), fp);
+        }
+        fgets(temp, sizeof(temp), fp);
+    }
     fclose(fp);
 }
 
-/* ---------- ADMIN REGISTER ---------- */
-void adminRegister() { // register admin baru
+/* ================= SEAT ================= */
+void clearSeats(struct Bus *bus) {
+    for (int i = 0; i < MAX_ROW; i++)
+        for (int j = 0; j < COL; j++)
+            bus->seat[i][j] = 0;
+}
+
+void showSeatLayout(struct Bus *bus) {
+    for (int i = 0; i < bus->rows; i++) {
+        printf("%c ", 'A' + i);
+        for (int j = 0; j < COL; j++)
+            printf(bus->seat[i][j] ? "[X] " : "[O] ");
+        printf("\n");
+    }
+}
+
+/* ================= SORT ================= */
+void sortBusesByNumber() {
+    for (int i = 0; i < busCount - 1; i++)
+        for (int j = 0; j < busCount - i - 1; j++)
+            if (buses[j].busNumber > buses[j + 1].busNumber) {
+                struct Bus t = buses[j];
+                buses[j] = buses[j + 1];
+                buses[j + 1] = t;
+            }
+}
+
+/* ================= BUS MANAGEMENT ================= */
+void addBus() {
+    struct Bus *bus;
+
+    if (busCount < MAX_BUS)
+        bus = &buses[busCount++];
+    else {
+        printf("Bus penuh. Overwrite bus lama? (y/n): ");
+        char c; scanf(" %c", &c);
+        if (c != 'y' && c != 'Y') return;
+
+        for (int i = 1; i < MAX_BUS; i++)
+            buses[i - 1] = buses[i];
+        bus = &buses[MAX_BUS - 1];
+    }
+
     clearScreen();
-    printf("New Username: "); scanf("%s", admins[adminCount].username);
-    printf("New Password: "); scanf("%s", admins[adminCount].password);
-    adminCount++;
-    saveAdmins(); // simpan ke file
-    printf("Admin berhasil dibuat!\n");
+    printf("Bus Number: "); scanf("%d", &bus->busNumber);
+    printf("From: "); scanf(" %[^\n]", bus->from);
+    printf("To: "); scanf(" %[^\n]", bus->to);
+
+    int size;
+    printf("1.Small  2.Big: "); scanf("%d", &size);
+
+    bus->rows = (size == 2) ? 6 : 3;
+    bus->totalSeats = bus->rows * COL;
+    bus->availableSeats = bus->totalSeats;
+    bus->active = 1;
+
+    clearSeats(bus);
+    saveBuses();
+
+    printf("Bus berhasil ditambahkan!\n");
     pauseScreen();
 }
 
-/* ---------- MENU ADMIN ---------- */
-void adminMenu() { // menu admin
+void viewBuses() {
+    if (busCount == 0) {
+        printf("Tidak ada bus\n");
+        pauseScreen();
+        return;
+    }
+
+    sortBusesByNumber();
+
+    for (int i = 0; i < busCount; i++) {
+        printf("\nBus %d | %s -> %s | %d/%d seats\n",
+               buses[i].busNumber,
+               buses[i].from,
+               buses[i].to,
+               buses[i].availableSeats,
+               buses[i].totalSeats);
+        showSeatLayout(&buses[i]);
+    }
+    pauseScreen();
+}
+
+void editBus() {
+    int num;
+    printf("Masukkan Bus Number yang ingin diedit: ");
+    scanf("%d", &num);
+
+    for (int i = 0; i < busCount; i++) {
+        if (buses[i].busNumber == num) {
+            clearScreen();
+            printf("Edit Bus %d\n", num);
+            printf("From: "); scanf(" %[^\n]", buses[i].from);
+            printf("To: "); scanf(" %[^\n]", buses[i].to);
+
+            saveBuses();
+            printf("Bus berhasil diupdate!\n");
+            pauseScreen();
+            return;
+        }
+    }
+    printf("Bus tidak ditemukan!\n");
+    pauseScreen();
+}
+
+void deleteBus() {
+    int num;
+    printf("Masukkan Bus Number yang ingin dihapus: ");
+    scanf("%d", &num);
+
+    for (int i = 0; i < busCount; i++) {
+        if (buses[i].busNumber == num) {
+            for (int j = i; j < busCount - 1; j++)
+                buses[j] = buses[j + 1];
+
+            busCount--;
+            saveBuses();
+            printf("Bus berhasil dihapus!\n");
+            pauseScreen();
+            return;
+        }
+    }
+    printf("Bus tidak ditemukan!\n");
+    pauseScreen();
+}
+
+/* ================= ADMIN MENU ================= */
+void adminMenu() {
     int c;
     do {
         clearScreen();
-        printf("1.Add Bus\n2.View Buses\n3.Logout\nChoose: "); scanf("%d", &c);
+        printf("===== ADMIN PANEL =====\n");
+        printf("1. Add Bus\n");
+        printf("2. View Buses\n");
+        printf("3. Edit Bus\n");
+        printf("4. Delete Bus\n");
+        printf("5. Exit\n");
+        printf("Choose: ");
+        scanf("%d", &c);
+
         if (c == 1) addBus();
         else if (c == 2) viewBuses();
-    } while (c != 3);
+        else if (c == 3) editBus();
+        else if (c == 4) deleteBus();
+
+    } while (c != 5);
+}
+
+/* ================= MAIN ================= */
+int main() {
+    loadBuses();
+    adminMenu();
+    return 0;
 }
