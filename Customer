@@ -1,0 +1,101 @@
+/* ================= SEAT DISPLAY ================= */  
+
+void showSeatLayout(struct Bus *bus) {
+    printf("\nSeat Layout:\n");
+    for (int i = 0; i < bus->rows; i++) {
+        printf("%c ", 'A' + i);
+        for (int j = 0; j < COL; j++) {
+            printf(bus->seat[i][j] ? "[X] " : "[O] ");
+        }
+        printf("\n");
+    }
+}
+
+
+
+
+void viewBuses() {     
+    if (busCount == 0) {
+        printf("Tidak ada schedule\n");
+        pauseScreen();
+        return;
+    }
+
+    sortBusesByNumber();
+
+    for (int i = 0; i < busCount; i++) {
+        printf("\nBus %d | %s -> %s | %d/%d seats\n",
+               buses[i].busNumber,
+               buses[i].from,
+               buses[i].to,
+               buses[i].availableSeats,
+               buses[i].totalSeats);
+        showSeatLayout(&buses[i]);
+    }
+    pauseScreen();
+}
+
+
+
+
+
+/* ================= BOOKING ================= */  
+
+void bookTicket() {
+    if (busCount == 0) {
+        printf("Tidak ada schedule\n");
+        pauseScreen();
+        return;
+    }
+
+    viewBuses();
+
+    int ch;
+    printf("Choose bus number: ");
+    scanf("%d", &ch);
+
+    for (int i = 0; i < busCount; i++) {
+        if (buses[i].busNumber == ch) {
+            struct Bus *b = &buses[i];
+
+            char row; int col;
+            printf("Row: ");
+            scanf(" %c", &row);
+            printf("Col: ");
+            scanf("%d", &col);
+
+            int r = row - 'A';
+            int c = col - 1;
+
+            if (r < 0 || r >= b->rows || c < 0 || c >= 4 || b->seat[r][c]) {
+                printf("Invalid seat!\n");
+                pauseScreen();
+                return;
+            }
+
+            b->seat[r][c] = 1;
+            b->availableSeats--;
+            saveBuses();
+
+            printf("Booking successful!\n");
+            pauseScreen();
+            return;
+        }
+    }
+
+    printf("Bus not found.\n");
+    pauseScreen();
+}
+
+
+
+void customerMenu() { 
+    int c;
+    do {
+        clearScreen();
+        printf("1.Book Ticket\n2.View Buses\n3.Back\nChoose: ");
+        scanf("%d", &c);
+        if (c == 1) bookTicket();
+        else if (c == 2) viewBuses();
+    } while (c != 3);
+}
