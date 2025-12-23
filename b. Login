@@ -82,3 +82,65 @@ void adminRegister() {
     printf("Admin created!\n");
     pauseScreen();
 }
+
+/* ================= CUSTOMER ================= */
+
+/*
+   Fungsi customerLogin()
+   Digunakan untuk login customer.
+   Mengembalikan nilai:
+   - 1 jika login berhasil
+   - 0 jika login gagal
+*/
+int customerLogin() {
+    char u[50], p[50];   // Menyimpan username dan password input user
+
+    clearScreen();      // Membersihkan layar sebelum menampilkan menu login
+
+    // Input username dan password dari user
+    printf("Username: ");
+    scanf("%s", u);
+
+    printf("Password: ");
+    scanf("%s", p);
+
+    // Loop untuk mengecek semua customer yang terdaftar
+    for (int i = 0; i < customerCount; i++) {
+
+        // Bandingkan username dan password input dengan data customer
+        if (!strcmp(u, customers[i].username) &&
+            !strcmp(p, customers[i].password)) {
+
+            // Simpan index customer yang berhasil login
+            loggedCustomerIndex = i;
+            return 1;   // Login berhasil
+        }
+    }
+
+    // Jika tidak ada yang cocok
+    printf("Login gagal!\n");
+    pauseScreen();      // Pause agar user bisa membaca pesan
+    return 0;           // Login gagal
+}
+
+/*
+   Fungsi customerRegister()
+   Digunakan untuk mendaftarkan customer baru
+*/
+void customerRegister() {
+    clearScreen();  // Bersihkan layar sebelum input data
+
+    // Input username dan password baru
+    printf("New Username: ");
+    scanf("%s", customers[customerCount].username);
+
+    printf("New Password: ");
+    scanf("%s", customers[customerCount].password);
+
+    customerCount++;    // Tambah jumlah customer
+
+    saveCustomers();    // Simpan data customer ke file
+
+    printf("Customer berhasil didaftarkan!\n");
+    pauseScreen();      // Pause agar user bisa membaca pesan
+}
